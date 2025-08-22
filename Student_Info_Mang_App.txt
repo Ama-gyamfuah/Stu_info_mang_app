@@ -1,0 +1,306 @@
+// lib/main.dart
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+void main() => runApp(const StudentInfoManagerApp());
+
+class StudentInfoManagerApp extends StatelessWidget {
+  const StudentInfoManagerApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Student Info Manager',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorSchemeSeed: const Color(0xFF2E7D32),
+        useMaterial3: true,
+        textTheme: GoogleFonts.poppinsTextTheme(),
+      ),
+      home: const HomeScreen(),
+    );
+  }
+}
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  // c) Student Counter
+  int _studentCount = 0;
+
+  // d) Login Form
+  final _formKey = GlobalKey<FormState>();
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+
+  // e) Profile image URL (replace if you like)
+  final String _imageUrl =
+      'https://images.unsplash.com/photo-1520975916090-3105956dac38?q=80&w=1200&auto=format&fit=crop';
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pad = EdgeInsets.symmetric(
+      horizontal: 16,
+      vertical: MediaQuery.of(context).size.width < 400 ? 8 : 12,
+    );
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Student Info Manager'),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // a) Welcome Dashboard
+              Padding(
+                padding: pad,
+                child: _InfoCard(
+                  title: 'Welcome, MISS AMA 👋',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      _Line(label: 'Name', value: 'Miss AMA'),
+                      _Line(label: 'Course', value: 'INFt 355: Web Engineering & Application'),
+                      _Line(label: 'University', value: 'University of Energy and Natural Resources'),
+                    ],
+                  ),
+                ),
+              ),
+
+              // b) Interactive Notification
+              Padding(
+                padding: pad,
+                child: FilledButton.icon(
+                  icon: const Icon(Icons.notifications_active),
+                  label: const Text('Show Alert'),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Hello, Miss AMA! Welcome to the Student Info Manager.'),
+                        behavior: SnackBarBehavior.floating,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // c) Student Counter
+              Padding(
+                padding: pad,
+                child: _InfoCard(
+                  title: 'Student Counter',
+                  child: Column(
+                    children: [
+                      Text(
+                        '$_studentCount',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton.filledTonal(
+                            onPressed: () => setState(() => _studentCount = (_studentCount - 1).clamp(0, 1 << 30)),
+                            icon: const Icon(Icons.remove),
+                            tooltip: 'Decrease',
+                          ),
+                          const SizedBox(width: 12),
+                          IconButton.filled(
+                            onPressed: () => setState(() => _studentCount++),
+                            icon: const Icon(Icons.add),
+                            tooltip: 'Increase',
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // d) Student Login Form (with validation)
+              Padding(
+                padding: pad,
+                child: _InfoCard(
+                  title: 'Student Login',
+                  child: Form(
+                    key: _formKey,
+                    autovalidateMode: AutovalidateMode.disabled,
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          controller: _emailCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Email',
+                            hintText: 'student@example.com',
+                            prefixIcon: Icon(Icons.email_outlined),
+                          ),
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (v) {
+                            final value = v?.trim() ?? '';
+                            if (value.isEmpty) return 'Email is required';
+                            if (!value.contains('@')) return 'Email must contain @';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _passCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Password',
+                            prefixIcon: Icon(Icons.lock_outline),
+                          ),
+                          obscureText: true,
+                          validator: (v) {
+                            final value = v ?? '';
+                            if (value.isEmpty) return 'Password is required';
+                            if (value.length < 6) return 'Password must be at least 6 characters';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: () {
+                              final ok = _formKey.currentState?.validate() ?? false;
+                              if (ok) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Login successful. Welcome, ${_emailCtrl.text.trim()}!'),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Please fix the errors and try again.'),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            },
+                            child: const Text('Login'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // e) Profile Picture Display (responsive)
+              Padding(
+                padding: pad,
+                child: _InfoCard(
+                  title: 'Profile Picture',
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isWide = constraints.maxWidth > 520;
+                      final height = isWide ? 260.0 : 200.0;
+                      return ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: SizedBox(
+                          height: height,
+                          width: double.infinity,
+                          child: Image.network(
+                            _imageUrl,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (c, w, p) {
+                              if (p == null) return w;
+                              return const Center(child: CircularProgressIndicator());
+                            },
+                            errorBuilder: (c, e, s) => const Center(
+                              child: Text('Failed to load image'),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoCard extends StatelessWidget {
+  final String title;
+  final Widget child;
+  const _InfoCard({required this.title, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 1.5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 10),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Line extends StatelessWidget {
+  final String label;
+  final String value;
+  const _Line({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(label,
+                textAlign: TextAlign.left,
+                style: Theme.of(context)
+                    .textTheme
+                    .labelLarge
+                    ?.copyWith(fontWeight: FontWeight.w600)),
+          ),
+          Expanded(
+            flex: 5,
+            child: Text(value, textAlign: TextAlign.right),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

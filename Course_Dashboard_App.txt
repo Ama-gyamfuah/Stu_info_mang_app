@@ -1,0 +1,364 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const CourseDashboardApp());
+}
+
+class CourseDashboardApp extends StatelessWidget {
+  const CourseDashboardApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Course Dashboard',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+      ),
+      home: const MainScreen(),
+    );
+  }
+}
+
+// Course Model
+class Course {
+  final String name;
+  final String instructor;
+  final IconData icon;
+  final String category;
+
+  Course({
+    required this.name,
+    required this.instructor,
+    required this.icon,
+    required this.category,
+  });
+}
+
+final List<Course> courses = [
+  Course(
+    name: "Introduction to Flutter",
+    instructor: "Dr. Sarah Johnson",
+    icon: Icons.code,
+    category: "Technology",
+  ),
+  Course(
+    name: "Advanced Mathematics",
+    instructor: "Prof. Michael Chen",
+    icon: Icons.calculate,
+    category: "Science",
+  ),
+  Course(
+    name: "Creative Writing",
+    instructor: "Ms. Emily Davis",
+    icon: Icons.edit,
+    category: "Arts",
+  ),
+  Course(
+    name: "Data Structures",
+    instructor: "Dr. Robert Wilson",
+    icon: Icons.storage,
+    category: "Technology",
+  ),
+  Course(
+    name: "Organic Chemistry",
+    instructor: "Prof. Lisa Anderson",
+    icon: Icons.science,
+    category: "Science",
+  ),
+  Course(
+    name: "Digital Art & Design",
+    instructor: "Mr. James Taylor",
+    icon: Icons.palette,
+    category: "Arts",
+  ),
+];
+
+final List<String> courseCategories = [
+  "All",
+  "Science",
+  "Arts",
+  "Technology",
+];
+
+// Main Screen with Bottom Navigation
+class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  int _currentIndex = 0;
+  String _selectedCategory = "All";
+
+  final List<Widget> _screens = [
+    const HomeScreen(),
+    const CoursesScreen(),
+    const ProfileScreen(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Course Dashboard'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: _showExitDialog,
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Category Dropdown
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                const Text(
+                  "Filter by:",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(width: 16),
+                DropdownButton<String>(
+                  value: _selectedCategory,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedCategory = newValue!;
+                    });
+                  },
+                  items: courseCategories
+                      .map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+          // Selected Category Display
+          Text(
+            "Selected Category: $_selectedCategory",
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.lightBlue,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: _screens[_currentIndex],
+          ),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.school),
+            label: 'Courses',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+      ),
+      floatingActionButton: AnimatedEnrollButton(
+        onPressed: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Enrolling in courses...')),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showExitDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Exit Confirmation'),
+          content: const Text('Are you sure you want to exit the app?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Logged out successfully')),
+                );
+              },
+              child: const Text('Yes'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// Animated Enroll Button
+class AnimatedEnrollButton extends StatefulWidget {
+  final VoidCallback onPressed;
+
+  const AnimatedEnrollButton({super.key, required this.onPressed});
+
+  @override
+  State<AnimatedEnrollButton> createState() => _AnimatedEnrollButtonState();
+}
+
+class _AnimatedEnrollButtonState extends State<AnimatedEnrollButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) {
+        setState(() {
+          _isPressed = true;
+        });
+      },
+      onTapUp: (_) {
+        setState(() {
+          _isPressed = false;
+        });
+        widget.onPressed();
+      },
+      onTapCancel: () {
+        setState(() {
+          _isPressed = false;
+        });
+      },
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 200),
+        scale: _isPressed ? 1.2 : 1.0,
+        child: FloatingActionButton(
+          onPressed: null,
+          child: const Icon(Icons.add),
+        ),
+      ),
+    );
+  }
+}
+
+// Screen Components
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.home, size: 64, color: Colors.blue),
+          SizedBox(height: 16),
+          Text(
+            'Home Screen',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 8),
+          Text('Welcome to your course dashboard!'),
+        ],
+      ),
+    );
+  }
+}
+
+class CoursesScreen extends StatelessWidget {
+  const CoursesScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Available Courses',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: ListView.builder(
+              itemCount: courses.length,
+              itemBuilder: (context, index) {
+                final course = courses[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  child: ListTile(
+                    leading: Icon(course.icon, color: Colors.cyan),
+                    title: Text(
+                      course.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      'Instructor: ${course.instructor}\nCategory: ${course.category}',
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios),
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Selected: ${course.name}')),
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 50,
+            backgroundColor: Colors.indigoAccent,
+            child: Icon(Icons.person, size: 40, color: Colors.cyan),
+          ),
+          SizedBox(height: 16),
+          Text(
+            'Student Profile',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 8),
+          Text('Name: Ama Monica '),
+          Text('Email: amagyamfuah@gmail.com'),
+          Text('Enrolled Courses: 5'),
+        ],
+      ),
+    );
+  }
+}
